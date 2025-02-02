@@ -1,0 +1,17 @@
+/* navbar.module.css */
+.button {
+  pointer-events: none; /* Disables all click interactions */
+  user-select: none; /* Prevents text selection */
+  cursor: default; /* Changes cursor to default (not clickable) */
+  opacity: 1 !important; /* Ensures no visual change on click */
+  transition: none !important; /* Disables any animation effects */
+}
+
+.button:active {
+  transform: none !important;
+}
+
+.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
