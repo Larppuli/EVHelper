@@ -1,6 +1,7 @@
 "use client";
 import { NumberInput } from "@mantine/core";
 
+// Define the props interface for the ChargingTime component
 interface ChargingTimeProps {
   onHourChange: (value: number) => void;
   onMinuteChange: (value: number) => void;
@@ -8,8 +9,8 @@ interface ChargingTimeProps {
   minutes: number;
 }
 
+// ChargingTime component definition
 export default function ChargingTime({ onHourChange, onMinuteChange, hours, minutes }: ChargingTimeProps) {
-
   return (
     <div 
       style={{ 
@@ -19,7 +20,9 @@ export default function ChargingTime({ onHourChange, onMinuteChange, hours, minu
         justifyContent: "center", 
         gap: "20px", 
         marginTop: "40px",
-       }}>
+       }}
+    >
+      {/* Number input for hours */}
       <NumberInput
         label="Hours"
         placeholder="Enter hours"
@@ -49,6 +52,7 @@ export default function ChargingTime({ onHourChange, onMinuteChange, hours, minu
           },
         })}
       />
+      {/* Number input for minutes */}
       <NumberInput
         label="Minutes"
         placeholder="Enter minutes"
