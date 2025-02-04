@@ -3,7 +3,7 @@ import React from "react";
 import { Paper, Group, Button, Stack } from "@mantine/core";
 import Link from "next/link";
 import { IconSettings, IconList, IconCircleDashedPlus } from '@tabler/icons-react';
-import styles from './navbar.module.css';
+import styles from './Navbar.module.css';
 import { usePathname } from "next/navigation";
 
 export default function Navbar() {
