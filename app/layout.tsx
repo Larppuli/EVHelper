@@ -1,6 +1,6 @@
 import '@mantine/core/styles.css';
 import Navbar from '@/components/Navbar/Navbar';
-import Header from '@/components/Navbar/Header';
+import Header from '@/components/Header';
 import React from 'react';
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from '@mantine/core';
 import '@mantine/dates/styles.css';
