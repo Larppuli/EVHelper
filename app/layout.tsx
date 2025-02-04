@@ -3,6 +3,7 @@ import Navbar from '@/components/Navbar/Navbar';
 import Header from '@/components/Navbar/Header';
 import React from 'react';
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from '@mantine/core';
+import '@mantine/dates/styles.css';
 
 export const metadata = {
   title: 'Mantine Next.js template',
@@ -15,7 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <ColorSchemeScript />
       </head>
-      <body style={{ backgroundColor: '#01030c' }}>
+      <body style={{ backgroundColor: 'black' }}>
         <MantineProvider>
           <Header/>
           <Navbar />
