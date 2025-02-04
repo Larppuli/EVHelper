@@ -19,7 +19,7 @@ export default function ChargingTime({ onHourChange, onMinuteChange, hours, minu
         display: "flex", 
         justifyContent: "center", 
         gap: "20px", 
-        marginTop: "40px",
+        marginTop: "23px",
        }}
     >
       {/* Number input for hours */}
@@ -36,6 +36,9 @@ export default function ChargingTime({ onHourChange, onMinuteChange, hours, minu
             color: theme.colors.gray[0],
             height: '50px',
             fontSize: '18px',
+            textAlign: 'center',
+            display: 'flex',
+            alignItems: 'center',
             "&:focus": {
               borderColor: theme.colors.blue[6],
             },
@@ -67,6 +70,9 @@ export default function ChargingTime({ onHourChange, onMinuteChange, hours, minu
             color: theme.colors.gray[0],
             height: '50px',
             fontSize: '18px',
+            textAlign: 'center',
+            display: 'flex',
+            alignItems: 'center',
             "&:focus": {
               borderColor: theme.colors.blue[6],
             },
