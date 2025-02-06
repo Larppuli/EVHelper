@@ -19,7 +19,7 @@ export default function Navbar() {
         height: '11vh',
         paddingBottom: 45,
         borderRadius: 0,
-        borderTop: "1px solid rgb(92, 92, 92)",
+        borderTop: "1px solid rgb(40, 40, 40)",
         backgroundColor: "#0e0e0e",
       }}
     >

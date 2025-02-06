@@ -23,31 +23,23 @@ export default function InitialMeterNum({ onInitialMeterNumChange, initialMeterN
                 decimalScale={2}
                 styles={(theme) => ({
                     input: {
-                        textAlign: 'center',
-                        display: 'flex',
-                        alignItems: 'center',
-                        height: '50px',
-                        fontSize: '18px',
-                        backgroundColor: theme.colors.dark[6],
-                        color: theme.colors.gray[0],
-                        '&:focus': {
-                            borderColor: theme.colors.blue[6],
-                        },
+                      backgroundColor: theme.colors.dark[7],
+                      color: theme.colors.gray[0],
+                      borderColor: theme.colors.dark[5],
+                      height: '50px',
+                      fontSize: '18px',
+                      textAlign: 'center',
+                      display: 'flex',
+                      alignItems: 'center',
                     },
                     label: {
-                        color: theme.colors.gray[4],
-                        fontWeight: 500,
-                    },
-                    wrapper: {
-                        marginBottom: theme.spacing.md,
+                      color: theme.colors.gray[4],
+                      fontWeight: 500,
                     },
                     control: {
-                        borderColor: theme.colors.dark[4],
-                        '&:hover': {
-                            backgroundColor: theme.colors.dark[5],
-                        },
+                      borderColor: theme.colors.dark[6],
                     },
-                })}
+                  })}
                 step={0.01}
                 min={0}
                 placeholder="Enter meter reading"
