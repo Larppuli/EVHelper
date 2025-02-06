@@ -1,136 +1,228 @@
 'use client';
 
-import { useState } from 'react';
-import { Paper } from '@mantine/core';
+import { useState, useEffect } from 'react';
+import { Paper, LoadingOverlay, Notification, Transition } from '@mantine/core';
+import { IconCheck } from '@tabler/icons-react';
 import InitialMeterNum from './components/InitialMeterNum';
 import MeterNumAfter from './components/MeterNumAfter';
 import StartingTime from './components/StartingTime';
 import SaveButton from './components/SaveButton';
 import ChargingTime from './components/ChargingTime';
+import { DateTime } from 'luxon';
 
 export default function Page() {
+  // Define ChargingSession interface
+  interface ChargingSession {
+    startTime: string;
+    endTime: string;
+    totalCost: number;
+    totalTime: number;
+  }
+
+  // Define state variables
   const [initialMeterNum, setInitialMeterNum] = useState<number>(0);
-  const [meterNumAfter, setMeterNumAfter] = useState<number>(initialMeterNum);
-  const [startTime, setStartTime] = useState<Date | null>(new Date());
+  const [meterNumAfter, setMeterNumAfter] = useState<number>(0);
+  const [startTime, setStartTime] = useState<DateTime | null>(
+    DateTime.now().setZone('Europe/Helsinki')
+  );
   const [hours, setHours] = useState<number>(0);
   const [minutes, setMinutes] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [enableAlert, setEnableAlert] = useState<boolean>(false);
+  const [savingLoading, setSavingLoading] = useState<boolean>(false);
 
   // Handle changes in the form inputs
   const handleInitialMeterNumChange = (value: number) => setInitialMeterNum(value);
   const handleMeterNumAfterChange = (value: number) => setMeterNumAfter(value);
-  const handleStartTimeChange = (value: Date | null) => setStartTime(value);
-  const handleChargingHourChange = (value: number) => setHours(value);
-  const handleChargingMinuteChange = (value: number) => setMinutes(value);
+  const handleStartTimeChange = (value: DateTime | null) => setStartTime(value);
+  // Fill meterNumAfter automatically with approximation
+  const handleChargingHourChange = (value: number) => {
+    setHours(value);
+    setMeterNumAfter(initialMeterNum + (minutes + 60 * value) * 0.1214);
+  };
+  const handleChargingMinuteChange = (value: number) => {
+    setMinutes(value);
+    setMeterNumAfter(initialMeterNum + (value + 60 * hours) * 0.1214);
+  };
+
+  useEffect(() => {
+    async function fetchChargingData() {
+      try {
+        const response = await fetch('/api/charging');
+        const data = await response.json();
+        setInitialMeterNum(data[data.length - 1]?.meterNumAfter || 0);
+        setMeterNumAfter(data[data.length - 1]?.meterNumAfter || 0);
+      } catch (error) {
+        console.error('Failed to fetch charging data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchChargingData();
+  }, []);
 
   // Calculate the end time of the charge
-  const calculateEndTime = (start: Date, hours: number, minutes: number): Date => {
-    const endTime = new Date(start);
-    endTime.setHours(start.getHours() + hours);
-    endTime.setMinutes(start.getMinutes() + minutes);
-    return endTime;
+  const calculateEndTime = (start: DateTime, hours: number, minutes: number): DateTime => {
+    return start.plus({ hours, minutes });
   };
 
   // Create an array of all the hours and dates when the charging happened
-  const createChargingHoursArray = (start: Date, end: Date): Array<{ date: string, hour: number, minutes: number }> => {
+  const createChargingHoursArray = (start: DateTime) => {
     const chargingHours = [];
     let minutesLeft = hours * 60 + minutes;
 
-    let currentHour = start.getHours();
-    let currentDate = start.toISOString().split('T')[0];
+    const firstMinutes = 60 - start.minute;
 
-    let minutesCharged = 60 - start.getMinutes();
-    
-    chargingHours.push({ date: currentDate, hour: currentHour, minutes: Math.min(minutesCharged, minutesLeft) });
-    minutesLeft -= Math.min(minutesCharged, minutesLeft);
+    if (firstMinutes < minutesLeft) {
+      chargingHours.push({ date: start.toISODate()!, hour: start.hour, minutes: firstMinutes });
+      minutesLeft -= firstMinutes;
+      start = start.plus({ minutes: firstMinutes });
+    }
+
+    let newStart = start;
 
     while (minutesLeft > 0) {
-      start.setHours(start.getHours() + 1);
-      currentHour = start.getHours();
-      currentDate = start.toISOString().split('T')[0];
-      minutesCharged = Math.min(60, minutesLeft);
+      let currentHour = newStart.hour;
+      let currentDate = newStart.toISODate()!;
+
+      let minutesCharged = Math.min(60, minutesLeft);
       chargingHours.push({ date: currentDate, hour: currentHour, minutes: minutesCharged });
+
       minutesLeft -= minutesCharged;
+      newStart = newStart.plus({ hours: 1 });
     }
 
     return chargingHours;
   };
 
-  // Fetch the price for a specific date and hour
+  // Fetch the price for a specific date and hour with retry logic
   const fetchPrice = async (date: string, hour: number): Promise<{ price: number }> => {
     const apiUrl = `/api/electricity-price?date=${date}&hour=${hour}`;
-    
-    try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) {
-        throw new Error(`Network response was not ok for ${date} ${hour}`);
+    const maxRetries = 3;
+    let attempts = 0;
+
+    while (attempts < maxRetries) {
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`Network response was not ok for ${date} ${hour}`);
+        }
+        const { data } = await response.json();
+        return { price: data.price };
+      } catch (error) {
+        attempts++;
+        console.error(`Failed to fetch price for ${date} ${hour} (attempt ${attempts}):`, error);
+        if (attempts >= maxRetries) {
+          return { price: 0 };
+        }
       }
-      const { data } = await response.json();
-      return { price: data.price };
-    } catch (error) {
-      return { price: 0 }; // Return a default value or handle the error as needed
     }
+    return { price: 0 };
   };
 
   // Handle form submission
   const handleSave = async () => {
     if (!startTime) return;
-  
+
     const priceOfHours = [];
     const totalElectricity = meterNumAfter - initialMeterNum;
     const electricityPerMinute = totalElectricity / (hours * 60 + minutes);
-  
+
     const endTime = calculateEndTime(startTime, hours, minutes);
-    const chargingHours = createChargingHoursArray(startTime, endTime);
-  
+    const chargingHours = createChargingHoursArray(startTime);
+
     for (const { date, hour, minutes } of chargingHours) {
+      console.log(date, hour, minutes);
       const price = await fetchPrice(date, hour);
-      priceOfHours.push({ 
-        date, 
-        hour, 
-        priceOfHour: price, 
-        electricity: electricityPerMinute * minutes, 
+      priceOfHours.push({
+        date,
+        hour,
+        priceOfHour: price,
+        electricity: electricityPerMinute * minutes,
+        minutesLoaded: minutes,
       });
     }
-  
+
     const chargingObject = {
+      initialMeterNum,
       meterNumAfter,
       startTime,
       endTime,
       chargingHours: priceOfHours,
       totalCost: priceOfHours.reduce((total, hour) => total + hour.priceOfHour.price * hour.electricity, 0),
+      totalTime: hours * 60 + minutes,
     };
-    
+
     try {
       const response = await fetch('/api/charging', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(chargingObject),
       });
-  
+
       if (response.ok) {
+        setHours(0);
+        setMinutes(0);
+        setInitialMeterNum(meterNumAfter);
+        setEnableAlert(true);
+
+        setTimeout(() => {
+          setEnableAlert(false);
+        }, 3000);
       }
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error('Fetch error:', error);
     }
+    setSavingLoading(false);
   };
-  
 
   return (
     <div
       style={{
-        display: 'flex', 
+        display: 'flex',
         justifyContent: 'center',
         width: '100vw',
         height: '90vh',
         marginTop: '7vh',
       }}
     >
-      <Paper style={{ width: '90vw', maxWidth: '400px', height: '78vh', marginTop: '2vh', backgroundColor: '#0e0e0e', paddingTop: '4vh', marginInline: '10px' }}>
+      <LoadingOverlay
+        visible={loading}
+        zIndex={1000}
+        overlayProps={{ radius: 'sm', blur: 2, color: 'rgba(14, 14, 14, 0.6)' }}
+        loaderProps={{ color: '#fffb00', type: 'bars' }}
+      />
+      <Paper
+        style={{
+          width: '90vw',
+          maxWidth: '400px',
+          height: '78vh',
+          marginTop: '2vh',
+          backgroundColor: '#0e0e0e',
+          paddingTop: '4vh',
+          marginInline: '10px',
+        }}
+      >
         <InitialMeterNum onInitialMeterNumChange={handleInitialMeterNumChange} initialMeterNum={initialMeterNum} />
-        <MeterNumAfter onMeterNumAfterChange={handleMeterNumAfterChange} meterNumAfter={meterNumAfter} />
-        <StartingTime onStartTimeChange={handleStartTimeChange} startTime={startTime} />
         <ChargingTime onHourChange={handleChargingHourChange} onMinuteChange={handleChargingMinuteChange} hours={hours} minutes={minutes} />
-        <SaveButton onClick={handleSave} />
+        <MeterNumAfter onMeterNumAfterChange={handleMeterNumAfterChange} meterNumAfter={meterNumAfter} minimum={initialMeterNum} />
+        <StartingTime onStartTimeChange={handleStartTimeChange} startTime={startTime} />
+        <SaveButton onClick={() => { handleSave(); setSavingLoading(true); }} disabled={hours === 0 && minutes === 0 || initialMeterNum-meterNumAfter>=0} loading={savingLoading} />
+        {enableAlert && (
+          <Transition
+            mounted={enableAlert}
+            duration={1100}
+            timingFunction="ease"
+            transition="fade"
+          >
+            {(styles) => (
+              <Notification withCloseButton={false} icon={<IconCheck />} color="teal" title="All good!" mt="md" style={styles}>
+                Charging saved successfully
+              </Notification>
+            )}
+          </Transition>
+        )}
       </Paper>
     </div>
   );
