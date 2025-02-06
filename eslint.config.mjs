@@ -16,6 +16,7 @@ export default [
     },
     rules: {
       'next/no-img-element': 'warn', // Example of a Next.js specific rule
+      'no-console': 'off'
     },
   },
 ];
