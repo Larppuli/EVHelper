@@ -19,7 +19,7 @@ const Header: React.FC = () => {
         display: "flex", 
         justifyContent: "center", 
         alignItems: "center",
-        borderBottom: "1px solid rgb(92, 92, 92)",
+        borderBottom: "1px solid rgb(40, 40, 40)",
         position: "fixed",
         top: 0,
         left: 0,
