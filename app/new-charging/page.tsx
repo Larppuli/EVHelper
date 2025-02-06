@@ -11,14 +11,6 @@ import ChargingTime from './components/ChargingTime';
 import { DateTime } from 'luxon';
 
 export default function Page() {
-  // Define ChargingSession interface
-  interface ChargingSession {
-    startTime: string;
-    endTime: string;
-    totalCost: number;
-    totalTime: number;
-  }
-
   // Define state variables
   const [initialMeterNum, setInitialMeterNum] = useState<number>(0);
   const [meterNumAfter, setMeterNumAfter] = useState<number>(0);
@@ -73,24 +65,23 @@ export default function Page() {
     let minutesLeft = hours * 60 + minutes;
 
     const firstMinutes = 60 - start.minute;
+    let currentStart = start;
 
     if (firstMinutes < minutesLeft) {
-      chargingHours.push({ date: start.toISODate()!, hour: start.hour, minutes: firstMinutes });
+      chargingHours.push({ date: currentStart.toISODate()!, hour: currentStart.hour, minutes: firstMinutes });
       minutesLeft -= firstMinutes;
-      start = start.plus({ minutes: firstMinutes });
+      currentStart = currentStart.plus({ minutes: firstMinutes });
     }
 
-    let newStart = start;
-
     while (minutesLeft > 0) {
-      let currentHour = newStart.hour;
-      let currentDate = newStart.toISODate()!;
+      const currentHour = currentStart.hour;
+      const currentDate = currentStart.toISODate()!;
 
-      let minutesCharged = Math.min(60, minutesLeft);
+      const minutesCharged = Math.min(60, minutesLeft);
       chargingHours.push({ date: currentDate, hour: currentHour, minutes: minutesCharged });
 
       minutesLeft -= minutesCharged;
-      newStart = newStart.plus({ hours: 1 });
+      currentStart = currentStart.plus({ hours: 1 });
     }
 
     return chargingHours;
@@ -112,7 +103,6 @@ export default function Page() {
         return { price: data.price };
       } catch (error) {
         attempts++;
-        console.error(`Failed to fetch price for ${date} ${hour} (attempt ${attempts}):`, error);
         if (attempts >= maxRetries) {
           return { price: 0 };
         }
@@ -123,7 +113,7 @@ export default function Page() {
 
   // Handle form submission
   const handleSave = async () => {
-    if (!startTime) return;
+    if (!startTime) {return;}
 
     const priceOfHours = [];
     const totalElectricity = meterNumAfter - initialMeterNum;

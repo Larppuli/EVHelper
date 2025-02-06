@@ -1,9 +1,16 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';
 
 const uri = process.env.MONGODB_URI || '';
 const dbName = process.env.MONGODB_DB;
 const collectionName = 'chargingData';
+
+interface ChargingData {
+  userId: string;
+  startTime: Date;
+  endTime: Date;
+  energyUsed: number;
+}
 
 async function connectToMongoDB() {
   if (!uri) {
@@ -16,7 +23,7 @@ async function connectToMongoDB() {
   return { client, collection };
 }
 
-async function saveToMongoDB(chargingObject: any) {
+async function saveToMongoDB(chargingObject: ChargingData): Promise<ObjectId> {
   const { client, collection } = await connectToMongoDB();
   try {
     const result = await collection.insertOne(chargingObject);
@@ -30,7 +37,7 @@ async function saveToMongoDB(chargingObject: any) {
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<Response> {
   try {
     const chargingObject = await req.json();
 
@@ -47,7 +54,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(): Promise<Response> {
   try {
     const { client, collection } = await connectToMongoDB();
     const data = await collection.find({}).toArray();
