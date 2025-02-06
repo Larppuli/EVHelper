@@ -1,10 +1,11 @@
 "use client";
 import { DateTimePicker } from '@mantine/dates';
 import { IconClockHour3Filled } from '@tabler/icons-react';
+import { DateTime } from 'luxon';
 
 type StartingTimeProps = {
-    onStartTimeChange: (value: Date | null) => void;
-    startTime: Date | null;
+    onStartTimeChange: (value: DateTime | null) => void;
+    startTime: DateTime | null;
   
   };
 
@@ -17,41 +18,28 @@ export default function StartingTime( { onStartTimeChange, startTime }: Starting
                 leftSection={icon}
                 valueFormat="DD MMM YYYY hh:mm"
                 label="Starting time of charging"
-                value={startTime}
-                onChange={(value) => {if (value) onStartTimeChange(value)}}
+                value={startTime ? startTime.toJSDate() : undefined}
+                onChange={(value) => {if (value) onStartTimeChange(DateTime.fromJSDate(value))}}
                 placeholder="Enter starting time"
                 styles={(theme) => ({
                     input: {
-                        textAlign: 'center',
-                        height: '50px',
-                        fontSize: '18px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: theme.colors.dark[6],
-                        color: theme.colors.gray[0],
-                        '&:focus': {
-                            borderColor: theme.colors.blue[6],
-                        },
+                      backgroundColor: theme.colors.dark[7],
+                      color: theme.colors.gray[0],
+                      borderColor: theme.colors.dark[5],
+                      height: '50px',
+                      fontSize: '18px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     },
                     label: {
-                        color: theme.colors.gray[4],
-                        fontWeight: 500,
-                    },
-                    wrapper: {
-                        marginBottom: theme.spacing.md,
+                      color: theme.colors.gray[4],
+                      fontWeight: 500,
                     },
                     control: {
-                        borderColor: theme.colors.dark[4],
-                        '&:hover': {
-                            backgroundColor: theme.colors.dark[5],
-                        },
+                      borderColor: theme.colors.dark[6],
                     },
-                    dropdown: {
-                        backgroundColor: theme.colors.dark[6],
-                        color: theme.colors.gray[0],
-                    },
-                })}
+                  })}
             />
         </div>
     );

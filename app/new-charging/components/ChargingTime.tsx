@@ -32,26 +32,21 @@ export default function ChargingTime({ onHourChange, onMinuteChange, hours, minu
         step={1}
         styles={(theme) => ({
           input: {
-            backgroundColor: theme.colors.dark[6],
+            backgroundColor: theme.colors.dark[7],
             color: theme.colors.gray[0],
+            borderColor: theme.colors.dark[5],
             height: '50px',
             fontSize: '18px',
             textAlign: 'center',
             display: 'flex',
             alignItems: 'center',
-            "&:focus": {
-              borderColor: theme.colors.blue[6],
-            },
           },
           label: {
             color: theme.colors.gray[4],
             fontWeight: 500,
           },
           control: {
-            borderColor: theme.colors.dark[4],
-            "&:hover": {
-              backgroundColor: theme.colors.dark[5],
-            },
+            borderColor: theme.colors.dark[6],
           },
         })}
       />
@@ -66,26 +61,21 @@ export default function ChargingTime({ onHourChange, onMinuteChange, hours, minu
         step={1}
         styles={(theme) => ({
           input: {
-            backgroundColor: theme.colors.dark[6],
+            backgroundColor: theme.colors.dark[7],
             color: theme.colors.gray[0],
+            borderColor: theme.colors.dark[5],
             height: '50px',
             fontSize: '18px',
             textAlign: 'center',
             display: 'flex',
             alignItems: 'center',
-            "&:focus": {
-              borderColor: theme.colors.blue[6],
-            },
           },
           label: {
             color: theme.colors.gray[4],
             fontWeight: 500,
           },
           control: {
-            borderColor: theme.colors.dark[4],
-            "&:hover": {
-              backgroundColor: theme.colors.dark[5],
-            },
+            borderColor: theme.colors.dark[6],
           },
         })}
       />
