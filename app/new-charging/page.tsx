@@ -22,6 +22,7 @@ export default function Page() {
   const [loading, setLoading] = useState<boolean>(true);
   const [enableAlert, setEnableAlert] = useState<boolean>(false);
   const [savingLoading, setSavingLoading] = useState<boolean>(false);
+  const [settings, setSettings] = useState<any>();
 
   // Handle changes in the form inputs
   const handleInitialMeterNumChange = (value: number) => setInitialMeterNum(value);
@@ -40,10 +41,13 @@ export default function Page() {
   useEffect(() => {
     async function fetchChargingData() {
       try {
-        const response = await fetch('/api/charging');
-        const data = await response.json();
-        setInitialMeterNum(data[data.length - 1]?.meterNumAfter || 0);
-        setMeterNumAfter(data[data.length - 1]?.meterNumAfter || 0);
+        const responseCharging = await fetch('/api/charging');
+        const responseSettings = await fetch('/api/settings');
+        const dataCharging = await responseCharging.json();
+        const dataSettings = await responseSettings.json();
+        setSettings(dataSettings[0]);
+        setInitialMeterNum(dataCharging[dataCharging.length - 1]?.meterNumAfter || 0);
+        setMeterNumAfter(dataCharging[dataCharging.length - 1]?.meterNumAfter || 0);
       } catch (error) {
         console.error('Failed to fetch charging data:', error);
       } finally {
@@ -140,8 +144,10 @@ export default function Page() {
       startTime,
       endTime,
       chargingHours: priceOfHours,
-      totalCost: priceOfHours.reduce((total, hour) => total + hour.priceOfHour.price * hour.electricity, 0),
+      totalCost: priceOfHours.reduce((total, hour) => total + hour.priceOfHour.price * hour.electricity, 0) / 100,
       totalTime: hours * 60 + minutes,
+      marginCost: settings.marginPrice * (meterNumAfter - initialMeterNum)  * 0.01,
+      transmissionCost: settings.transmissionFee * (meterNumAfter - initialMeterNum) * 0.01,
     };
 
     try {
