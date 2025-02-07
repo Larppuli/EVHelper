@@ -1,13 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Stack } from '@mantine/core';
-import { LoadingOverlay, Text } from '@mantine/core';
-import { Table } from '@mantine/core';
-import { IconCalendar } from '@tabler/icons-react';
-import { IconChargingPileFilled } from '@tabler/icons-react';
-import { IconChargingPile } from '@tabler/icons-react';
-import { IconReceiptEuro } from '@tabler/icons-react'
+import { LoadingOverlay, Stack, Table } from '@mantine/core';
+import { IconCalendar, IconReceiptEuro, IconChargingPile, IconChargingPileFilled } from '@tabler/icons-react';
 
 export default function Page() {
   interface ChargingSession {
@@ -36,7 +31,7 @@ export default function Page() {
 
         setChargingData(sortedData);
       } catch (error) {
-        console.error("Failed to fetch charging data:", error);
+        return 0;
       } finally {
         setLoading(false);
       }
@@ -47,10 +42,10 @@ export default function Page() {
 
   return (
     <Stack
-      mt={'9vh'}
-      w={'90vw'}
+      mt="9vh"
+      w="90vw"
       maw={600}
-      mx={'auto'}
+      mx="auto"
     >
       <LoadingOverlay
         visible={loading}
@@ -58,23 +53,23 @@ export default function Page() {
         overlayProps={{ radius: 'sm', blur: 2, color: 'rgba(14, 14, 14, 0.6)' }}
         loaderProps={{ color: '#fffb00', type: 'bars' }}
       />
-      <Table.ScrollContainer mt={10} bg={'#0e0e0e'}  minWidth={100} style={{ borderRadius: '4px' }}>
+      <Table.ScrollContainer mt={10} bg="#0e0e0e"  minWidth={100} style={{ borderRadius: '4px' }}>
         <Table>
           <Table.Thead>
-            <Table.Tr bd={0} bg={'#2f2f2f'}>
-              <Table.Td c={'#fffb00'} ta={'center'}><IconCalendar/></Table.Td>
-              <Table.Td c={'#fffb00'} ta={'center'}><IconChargingPile/></Table.Td>
-              <Table.Td c={'#fffb00'} ta={'center'}><IconChargingPileFilled/></Table.Td>
-              <Table.Td c={'#fffb00'} ta={'center'}><IconReceiptEuro/></Table.Td>
+            <Table.Tr bd={0} bg="#2f2f2f">
+              <Table.Td c="#fffb00" ta="center"><IconCalendar/></Table.Td>
+              <Table.Td c="#fffb00" ta="center"><IconChargingPile/></Table.Td>
+              <Table.Td c="#fffb00" ta="center"><IconChargingPileFilled/></Table.Td>
+              <Table.Td c="#fffb00" ta="center"><IconReceiptEuro/></Table.Td>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {chargingData.map((chargingSession, index) => (
               <Table.Tr style={{ borderBottom: '1px solid #2f2f2f' }} key={index}>
-                <Table.Td c={'white'} ta={'center'}>{new Date(chargingSession.startTime).toLocaleDateString('fi-FI')}</Table.Td>
-                <Table.Td c={'white'} ta={'center'}>{chargingSession.initialMeterNum.toFixed(2)}</Table.Td>
-                <Table.Td c={'white'} ta={'center'}>{chargingSession.meterNumAfter.toFixed(2)}</Table.Td>
-                <Table.Td c={'white'} ta={'center'}>{chargingSession.totalCost.toFixed(2)} €</Table.Td>
+                <Table.Td c="white" ta="center">{new Date(chargingSession.startTime).toLocaleDateString('fi-FI')}</Table.Td>
+                <Table.Td c="white" ta="center">{chargingSession.initialMeterNum.toFixed(2)}</Table.Td>
+                <Table.Td c="white" ta="center">{chargingSession.meterNumAfter.toFixed(2)}</Table.Td>
+                <Table.Td c="white" ta="center">{chargingSession.totalCost.toFixed(2)} €</Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>

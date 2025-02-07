@@ -3,13 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const uri = process.env.MONGODB_URI || '';
 const dbName = process.env.MONGODB_DB;
-const collectionName = 'chargingData';
+const collectionName = 'settings';
 
-interface ChargingData {
+interface SettingsData {
   userId: string;
-  startTime: Date;
-  endTime: Date;
-  energyUsed: number;
+  marginPrice: number;
+  transmissionFee: Date;
 }
 
 async function connectToMongoDB() {
@@ -23,10 +22,10 @@ async function connectToMongoDB() {
   return { client, collection };
 }
 
-async function saveToMongoDB(chargingObject: ChargingData): Promise<ObjectId> {
+async function saveToMongoDB(settingsObject: SettingsData): Promise<ObjectId> {
   const { client, collection } = await connectToMongoDB();
   try {
-    const result = await collection.insertOne(chargingObject);
+    const result = await collection.insertOne(settingsObject);
     console.log("Saved to MongoDB:", result.insertedId);
     return result.insertedId;
   } catch (error) {
@@ -39,13 +38,13 @@ async function saveToMongoDB(chargingObject: ChargingData): Promise<ObjectId> {
 
 export async function POST(req: NextRequest): Promise<Response> {
   try {
-    const chargingObject = await req.json();
+    const settingsObject = await req.json();
 
-    if (!chargingObject) {
-      return new NextResponse(JSON.stringify({ error: "Missing chargingObject" }), { status: 400 });
+    if (!settingsObject) {
+      return new NextResponse(JSON.stringify({ error: "Missing settingsObject" }), { status: 400 });
     }
 
-    const insertedId = await saveToMongoDB(chargingObject);
+    const insertedId = await saveToMongoDB(settingsObject);
     return new NextResponse(JSON.stringify({ success: true, insertedId }), { status: 201 });
   } catch (error) {
     console.error("API Error:", error);
@@ -60,6 +59,27 @@ export async function GET(): Promise<Response> {
     const data = await collection.find({}).toArray();
     await client.close();
     return new NextResponse(JSON.stringify(data), { status: 200 });
+  } catch (error) {
+    console.error("API Error:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest): Promise<Response> {
+  try {
+    const updateData = await req.json();
+    const { client, collection } = await connectToMongoDB();
+
+    const result = await collection.updateOne({}, { $set: updateData });
+
+    await client.close();
+
+    if (result.matchedCount === 0) {
+      return new NextResponse(JSON.stringify({ error: "No document found to update" }), { status: 404 });
+    }
+
+    return new NextResponse(JSON.stringify({ success: true }), { status: 200 });
   } catch (error) {
     console.error("API Error:", error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

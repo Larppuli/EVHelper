@@ -11,14 +11,6 @@ import ChargingTime from './components/ChargingTime';
 import { DateTime } from 'luxon';
 
 export default function Page() {
-  // Define ChargingSession interface
-  interface ChargingSession {
-    startTime: string;
-    endTime: string;
-    totalCost: number;
-    totalTime: number;
-  }
-
   // Define state variables
   const [initialMeterNum, setInitialMeterNum] = useState<number>(0);
   const [meterNumAfter, setMeterNumAfter] = useState<number>(0);
@@ -30,6 +22,7 @@ export default function Page() {
   const [loading, setLoading] = useState<boolean>(true);
   const [enableAlert, setEnableAlert] = useState<boolean>(false);
   const [savingLoading, setSavingLoading] = useState<boolean>(false);
+  const [settings, setSettings] = useState<any>();
 
   // Handle changes in the form inputs
   const handleInitialMeterNumChange = (value: number) => setInitialMeterNum(value);
@@ -48,10 +41,13 @@ export default function Page() {
   useEffect(() => {
     async function fetchChargingData() {
       try {
-        const response = await fetch('/api/charging');
-        const data = await response.json();
-        setInitialMeterNum(data[data.length - 1]?.meterNumAfter || 0);
-        setMeterNumAfter(data[data.length - 1]?.meterNumAfter || 0);
+        const responseCharging = await fetch('/api/charging');
+        const responseSettings = await fetch('/api/settings');
+        const dataCharging = await responseCharging.json();
+        const dataSettings = await responseSettings.json();
+        setSettings(dataSettings[0]);
+        setInitialMeterNum(dataCharging[dataCharging.length - 1]?.meterNumAfter || 0);
+        setMeterNumAfter(dataCharging[dataCharging.length - 1]?.meterNumAfter || 0);
       } catch (error) {
         console.error('Failed to fetch charging data:', error);
       } finally {
@@ -73,24 +69,23 @@ export default function Page() {
     let minutesLeft = hours * 60 + minutes;
 
     const firstMinutes = 60 - start.minute;
+    let currentStart = start;
 
     if (firstMinutes < minutesLeft) {
-      chargingHours.push({ date: start.toISODate()!, hour: start.hour, minutes: firstMinutes });
+      chargingHours.push({ date: currentStart.toISODate()!, hour: currentStart.hour, minutes: firstMinutes });
       minutesLeft -= firstMinutes;
-      start = start.plus({ minutes: firstMinutes });
+      currentStart = currentStart.plus({ minutes: firstMinutes });
     }
 
-    let newStart = start;
-
     while (minutesLeft > 0) {
-      let currentHour = newStart.hour;
-      let currentDate = newStart.toISODate()!;
+      const currentHour = currentStart.hour;
+      const currentDate = currentStart.toISODate()!;
 
-      let minutesCharged = Math.min(60, minutesLeft);
+      const minutesCharged = Math.min(60, minutesLeft);
       chargingHours.push({ date: currentDate, hour: currentHour, minutes: minutesCharged });
 
       minutesLeft -= minutesCharged;
-      newStart = newStart.plus({ hours: 1 });
+      currentStart = currentStart.plus({ hours: 1 });
     }
 
     return chargingHours;
@@ -112,7 +107,6 @@ export default function Page() {
         return { price: data.price };
       } catch (error) {
         attempts++;
-        console.error(`Failed to fetch price for ${date} ${hour} (attempt ${attempts}):`, error);
         if (attempts >= maxRetries) {
           return { price: 0 };
         }
@@ -123,7 +117,7 @@ export default function Page() {
 
   // Handle form submission
   const handleSave = async () => {
-    if (!startTime) return;
+    if (!startTime) {return;}
 
     const priceOfHours = [];
     const totalElectricity = meterNumAfter - initialMeterNum;
@@ -150,8 +144,10 @@ export default function Page() {
       startTime,
       endTime,
       chargingHours: priceOfHours,
-      totalCost: priceOfHours.reduce((total, hour) => total + hour.priceOfHour.price * hour.electricity, 0),
+      totalCost: priceOfHours.reduce((total, hour) => total + hour.priceOfHour.price * hour.electricity, 0) / 100,
       totalTime: hours * 60 + minutes,
+      marginCost: settings.marginPrice * (meterNumAfter - initialMeterNum)  * 0.01,
+      transmissionCost: settings.transmissionFee * (meterNumAfter - initialMeterNum) * 0.01,
     };
 
     try {

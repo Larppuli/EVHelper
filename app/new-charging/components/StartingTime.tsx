@@ -19,7 +19,7 @@ export default function StartingTime( { onStartTimeChange, startTime }: Starting
                 valueFormat="DD MMM YYYY hh:mm"
                 label="Starting time of charging"
                 value={startTime ? startTime.toJSDate() : undefined}
-                onChange={(value) => {if (value) onStartTimeChange(DateTime.fromJSDate(value))}}
+                onChange={(value) => {if (value) {onStartTimeChange(DateTime.fromJSDate(value))}}}
                 placeholder="Enter starting time"
                 styles={(theme) => ({
                     input: {

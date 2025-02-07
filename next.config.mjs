@@ -13,6 +13,7 @@ export default withBundleAnalyzer(
     },
     experimental: {
       appDir: true,
+      buildCache: true,
     },
     pwa: {
       dest: 'public',
