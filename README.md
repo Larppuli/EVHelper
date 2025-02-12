@@ -1,37 +1,42 @@
-# Mantine Next.js template
+# EVHelper
 
-This is a template for [Next.js](https://nextjs.org/) app router + [Mantine](https://mantine.dev/).
-If you want to use pages router instead, see [next-pages-template](https://github.com/mantinedev/next-pages-template).
+This Progressive Web Application simplifies tracking electric vehicle charging costs based on variable Nord Pool electricity prices, making it especially useful for entrepreneurs charging their EVs with company funds.
 
-## Features
+### Features 
+- Automatically fetches real-time Nord Pool electricity prices.
+- Calculates charging costs based on time and energy consumption.
+- Exports xlsx-file accepted by Finnish Tax Adminstrators.
+- Adds transmission fees and margin costs.
 
-This template comes with the following features:
+### Views of the application
+![image](https://github.com/user-attachments/assets/bcbae5b5-0b7c-41f9-9544-92dd4b36cbb6)
 
-- [PostCSS](https://postcss.org/) with [mantine-postcss-preset](https://mantine.dev/styles/postcss-preset)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Storybook](https://storybook.js.org/)
-- [Jest](https://jestjs.io/) setup with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro)
-- ESLint setup with [eslint-config-mantine](https://github.com/mantinedev/eslint-config-mantine)
+### Example of exported xlsx-file
+![image](https://github.com/user-attachments/assets/15f6033c-5c00-449a-ab87-41b66e454644)
 
-## npm scripts
+## Installation & Setup  
 
-### Build and dev scripts
+Follow these steps to install and run **EVHelper** locally.  
 
-- `dev` – start dev server
-- `build` – bundle application for production
-- `analyze` – analyzes application bundle with [@next/bundle-analyzer](https://www.npmjs.com/package/@next/bundle-analyzer)
+### Prerequisites  
+- [Node.js](https://nodejs.org/) (Latest LTS version recommended)  
+- [Yarn](https://yarnpkg.com/) (Install via `npm install -g yarn` if not already installed)  
+- [Git](https://git-scm.com/)  
 
-### Testing scripts
+### Steps  
 
-- `typecheck` – checks TypeScript types
-- `lint` – runs ESLint
-- `prettier:check` – checks files with Prettier
-- `jest` – runs jest tests
-- `jest:watch` – starts jest watch
-- `test` – runs `jest`, `prettier:check`, `lint` and `typecheck` scripts
+```sh
+# 1. Clone the repository  
+git clone https://github.com/your-username/EVHelper.git  
+cd EVHelper  
 
-### Other scripts
+# 2. Install dependencies  
+yarn install  
 
-- `storybook` – starts storybook dev server
-- `storybook:build` – build production storybook bundle to `storybook-static`
-- `prettier:write` – formats all files with Prettier
+# 3. Set up environment variables  
+echo "MONGODB_URI=your_database_key_here" > .env
+echo "MONGODB_DB=your_database_name_here" >> .env 
+
+# 4. Run the application  
+yarn start  
+# The application should now be accessible at http://localhost:3000/  
