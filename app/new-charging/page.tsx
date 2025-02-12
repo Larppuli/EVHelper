@@ -31,11 +31,11 @@ export default function Page() {
   // Fill meterNumAfter automatically with approximation
   const handleChargingHourChange = (value: number) => {
     setHours(value);
-    setMeterNumAfter(initialMeterNum + (minutes + 60 * value) * 0.1214);
+    setMeterNumAfter(parseFloat((initialMeterNum + (minutes + 60 * value) * 0.1214).toFixed(2)));
   };
   const handleChargingMinuteChange = (value: number) => {
     setMinutes(value);
-    setMeterNumAfter(initialMeterNum + (value + 60 * hours) * 0.1214);
+    setMeterNumAfter(parseFloat((initialMeterNum + (value + 60 * hours) * 0.1214).toFixed(2)));
   };
 
   useEffect(() => {
