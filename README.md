@@ -18,7 +18,7 @@ This Progressive Web Application simplifies tracking electric vehicle charging c
 - **3rd Party APIs**: [Porssisahko.net](https://porssisahko.net/api) for fetching electricity prices for specific time frames
 
 ## Views of the Application
-![image](https://github.com/user-attachments/assets/bcbae5b5-0b7c-41f9-9544-92dd4b36cbb6)
+![image](https://github.com/user-attachments/assets/edf0a88e-a58f-4e97-af10-a72d53a7874a)
 
 ## Example of Exported xlsx-file
 ![image](https://github.com/user-attachments/assets/15f6033c-5c00-449a-ab87-41b66e454644)
