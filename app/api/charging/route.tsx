@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const uri = process.env.MONGODB_URI || '';
 const dbName = process.env.MONGODB_DB;
-const collectionName = 'chargingData';
+const collectionName = 'chargings';
 
 interface ChargingData {
   userId: string;
@@ -60,6 +60,24 @@ export async function GET(): Promise<Response> {
     const data = await collection.find({}).toArray();
     await client.close();
     return new NextResponse(JSON.stringify(data), { status: 200 });
+  } catch (error) {
+    console.error("API Error:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 });
+  }
+}
+
+export async function DELETE(): Promise<Response> {
+  try {
+    const { client, collection } = await connectToMongoDB();
+    const result = await collection.deleteMany({});
+    await client.close();
+
+    if (result.deletedCount === 0) {
+      return new NextResponse(JSON.stringify({ error: "No documents found to delete" }), { status: 404 });
+    }
+
+    return new NextResponse(JSON.stringify({ success: true, deletedCount: result.deletedCount }), { status: 200 });
   } catch (error) {
     console.error("API Error:", error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

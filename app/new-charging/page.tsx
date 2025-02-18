@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Paper, LoadingOverlay, Notification, Transition } from '@mantine/core';
+import { Stack, Paper, LoadingOverlay, Notification, Transition } from '@mantine/core';
 import { IconCheck } from '@tabler/icons-react';
 import InitialMeterNum from './components/InitialMeterNum';
 import MeterNumAfter from './components/MeterNumAfter';
@@ -9,26 +9,38 @@ import StartingTime from './components/StartingTime';
 import SaveButton from './components/SaveButton';
 import ChargingTime from './components/ChargingTime';
 import { DateTime } from 'luxon';
+import { useData } from '../context/DataContext';
 
 export default function Page() {
-  // Define state variables
-  const [initialMeterNum, setInitialMeterNum] = useState<number>(0);
-  const [meterNumAfter, setMeterNumAfter] = useState<number>(0);
+  // State variables using context data for initialization
+  const { data: { isLoading, settings, dataCharging: chargingData }, addChargingData } = useData() || { 
+    data: { isLoading: true, settings: {}, dataCharging: [] }, 
+    addChargingData: () => {}, 
+  };
+  const lastCharging = chargingData && chargingData.length > 0 ? chargingData[chargingData.length - 1] : null;
+
+  const [initialMeterNum, setInitialMeterNum] = useState<number>(lastCharging?.meterNumAfter || 0);
+  const [meterNumAfter, setMeterNumAfter] = useState<number>(lastCharging?.meterNumAfter || 0);
   const [startTime, setStartTime] = useState<DateTime | null>(
     DateTime.now().setZone('Europe/Helsinki')
   );
   const [hours, setHours] = useState<number>(0);
   const [minutes, setMinutes] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
   const [enableAlert, setEnableAlert] = useState<boolean>(false);
   const [savingLoading, setSavingLoading] = useState<boolean>(false);
-  const [settings, setSettings] = useState<any>();
+
+  useEffect(() => {
+    if (!isLoading && lastCharging) {
+      setInitialMeterNum(lastCharging.meterNumAfter || 0);
+      // Update meterNumAfter if necessary
+      setMeterNumAfter(lastCharging.meterNumAfter || 0);
+    }
+  }, [isLoading, lastCharging]);
 
   // Handle changes in the form inputs
   const handleInitialMeterNumChange = (value: number) => setInitialMeterNum(value);
   const handleMeterNumAfterChange = (value: number) => setMeterNumAfter(value);
   const handleStartTimeChange = (value: DateTime | null) => setStartTime(value);
-  // Fill meterNumAfter automatically with approximation
   const handleChargingHourChange = (value: number) => {
     setHours(value);
     setMeterNumAfter(parseFloat((initialMeterNum + (minutes + 60 * value) * 0.1214).toFixed(2)));
@@ -38,32 +50,10 @@ export default function Page() {
     setMeterNumAfter(parseFloat((initialMeterNum + (value + 60 * hours) * 0.1214).toFixed(2)));
   };
 
-  useEffect(() => {
-    async function fetchChargingData() {
-      try {
-        const responseCharging = await fetch('/api/charging');
-        const responseSettings = await fetch('/api/settings');
-        const dataCharging = await responseCharging.json();
-        const dataSettings = await responseSettings.json();
-        setSettings(dataSettings[0]);
-        setInitialMeterNum(dataCharging[dataCharging.length - 1]?.meterNumAfter || 0);
-        setMeterNumAfter(dataCharging[dataCharging.length - 1]?.meterNumAfter || 0);
-      } catch (error) {
-        console.error('Failed to fetch charging data:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchChargingData();
-  }, []);
-
-  // Calculate the end time of the charge
   const calculateEndTime = (start: DateTime, hours: number, minutes: number): DateTime => {
     return start.plus({ hours, minutes });
   };
 
-  // Create an array of all the hours and dates when the charging happened
   const createChargingHoursArray = (start: DateTime) => {
     const chargingHours = [];
     let minutesLeft = hours * 60 + minutes;
@@ -91,7 +81,6 @@ export default function Page() {
     return chargingHours;
   };
 
-  // Fetch the price for a specific date and hour with retry logic
   const fetchPrice = async (date: string, hour: number): Promise<{ price: number }> => {
     const apiUrl = `/api/electricity-price?date=${date}&hour=${hour}`;
     const maxRetries = 3;
@@ -115,9 +104,8 @@ export default function Page() {
     return { price: 0 };
   };
 
-  // Handle form submission
   const handleSave = async () => {
-    if (!startTime) {return;}
+    if (!startTime) return;
 
     const priceOfHours = [];
     const totalElectricity = meterNumAfter - initialMeterNum;
@@ -127,7 +115,6 @@ export default function Page() {
     const chargingHours = createChargingHoursArray(startTime);
 
     for (const { date, hour, minutes } of chargingHours) {
-      console.log(date, hour, minutes);
       const price = await fetchPrice(date, hour);
       priceOfHours.push({
         date,
@@ -141,12 +128,12 @@ export default function Page() {
     const chargingObject = {
       initialMeterNum,
       meterNumAfter,
-      startTime,
-      endTime,
+      startTime: startTime.toString(),
+      endTime: endTime.toString(),
       chargingHours: priceOfHours,
       totalCost: priceOfHours.reduce((total, hour) => total + hour.priceOfHour.price * hour.electricity, 0) / 100,
       totalTime: hours * 60 + minutes,
-      marginCost: settings.marginPrice * (meterNumAfter - initialMeterNum)  * 0.01,
+      marginCost: settings.marginPrice * (meterNumAfter - initialMeterNum) * 0.01,
       transmissionCost: settings.transmissionFee * (meterNumAfter - initialMeterNum) * 0.01,
     };
 
@@ -158,6 +145,8 @@ export default function Page() {
       });
 
       if (response.ok) {
+        const responseData = await response.json();
+        addChargingData({ ...chargingObject, _id: responseData._id });
         setHours(0);
         setMinutes(0);
         setInitialMeterNum(meterNumAfter);
@@ -165,7 +154,7 @@ export default function Page() {
 
         setTimeout(() => {
           setEnableAlert(false);
-        }, 3000);
+        }, 4000);
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -174,52 +163,66 @@ export default function Page() {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        width: '100vw',
-        height: '90vh',
-        marginTop: '7vh',
-      }}
+    <Stack
+      mt='7vh'
+      h='90vh'
+      w='100vw'
+      align='center'
     >
       <LoadingOverlay
-        visible={loading}
+        visible={isLoading}
         zIndex={1000}
         overlayProps={{ radius: 'sm', blur: 2, color: 'rgba(14, 14, 14, 0.6)' }}
         loaderProps={{ color: '#fffb00', type: 'bars' }}
       />
-      <Paper
-        style={{
-          width: '90vw',
-          maxWidth: '400px',
-          height: '78vh',
-          marginTop: '2vh',
-          backgroundColor: '#0e0e0e',
-          paddingTop: '4vh',
-          marginInline: '10px',
-        }}
+      <Stack
+        align='center'
+        h='70vh'
+        w='90vw'
+        maw='400px'
+        mt='2vh'
+        bg='#0e0e0e'
+        pt='4vh'
+        mx='10px'
       >
-        <InitialMeterNum onInitialMeterNumChange={handleInitialMeterNumChange} initialMeterNum={initialMeterNum} />
-        <ChargingTime onHourChange={handleChargingHourChange} onMinuteChange={handleChargingMinuteChange} hours={hours} minutes={minutes} />
-        <MeterNumAfter onMeterNumAfterChange={handleMeterNumAfterChange} meterNumAfter={meterNumAfter} minimum={initialMeterNum} />
-        <StartingTime onStartTimeChange={handleStartTimeChange} startTime={startTime} />
-        <SaveButton onClick={() => { handleSave(); setSavingLoading(true); }} disabled={hours === 0 && minutes === 0 || initialMeterNum-meterNumAfter>=0} loading={savingLoading} />
-        {enableAlert && (
+        <Stack
+          h='80%'
+        >
+          <InitialMeterNum onInitialMeterNumChange={handleInitialMeterNumChange} initialMeterNum={initialMeterNum} />
+          <ChargingTime onHourChange={handleChargingHourChange} onMinuteChange={handleChargingMinuteChange} hours={hours} minutes={minutes} />
+          <MeterNumAfter onMeterNumAfterChange={handleMeterNumAfterChange} meterNumAfter={meterNumAfter} minimum={initialMeterNum} />
+          <StartingTime onStartTimeChange={handleStartTimeChange} startTime={startTime} />
+          <SaveButton onClick={() => { handleSave(); setSavingLoading(true); }} disabled={hours === 0 && minutes === 0 || initialMeterNum-meterNumAfter>=0} loading={savingLoading} />
+        </Stack>
           <Transition
             mounted={enableAlert}
-            duration={1100}
+            transition="pop"
+            duration={400}
             timingFunction="ease"
-            transition="fade"
           >
             {(styles) => (
-              <Notification withCloseButton={false} icon={<IconCheck />} color="teal" title="All good!" mt="md" style={styles}>
+              <Notification 
+                bg='#252525' withCloseButton={false} 
+                icon={<IconCheck />} 
+                color="green" 
+                title="All good!" mt="md"
+                style={{
+                  ...styles, // Spread the transition styles
+                  width: '90%', // Set your desired width here
+                }}
+                styles={{
+                  title: { 
+                    color: 'white',
+                  },
+                  description: {
+                    color: 'white',
+                  }
+              }}>
                 Charging saved successfully
               </Notification>
             )}
           </Transition>
-        )}
-      </Paper>
-    </div>
+      </Stack>
+    </Stack>
   );
 }

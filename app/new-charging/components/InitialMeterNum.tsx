@@ -12,7 +12,7 @@ export default function InitialMeterNum({ onInitialMeterNumChange, initialMeterN
     const icon = <IconChargingPileFilled size={20} />;
 
     return (
-        <div style={{ maxWidth: '300px', margin: 'auto', marginTop: '20px' }}>
+        <div style={{ width: '80%', margin: 'auto', marginTop: '10px' }}>
             <NumberInput
                 leftSection={icon}
                 label="Meter number before charging"
