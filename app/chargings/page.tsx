@@ -1,63 +1,37 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { LoadingOverlay, Stack, Table, Group, Button } from '@mantine/core';
+import { Stack, Table, Group, Button, Modal } from '@mantine/core';
 import { IconCalendar, IconReceiptEuro, IconChargingPile, IconChargingPileFilled, IconDownload, IconTrash } from '@tabler/icons-react';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { useData } from '../context/DataContext';
+import { useDisclosure } from '@mantine/hooks';
 
 export default function Page() {
-  interface ChargingSession {
-    startTime: string;
-    endTime: string;
-    totalCost: number;
-    totalTime: number;
-    meterNumAfter: number;
-    initialMeterNum: number;
-    chargingHours: Array<{ 
-      date: string; 
-      hour: number; 
-      priceOfHour: { price: number }; 
-      electricity: number; 
-      minutesLoaded: number }>;
-  }
+  const { data: { settings, dataCharging }, deleteAllChargingData } = useData() || { data: { settings: {}, dataCharging: [], deleteAllChargingData: () => {} } };
+  const [opened, { open, close }] = useDisclosure(false);
 
-  interface Settings {
-    marginPrice: number;
-    transmissionFee: number;
-  }
+  const chargingData = [...dataCharging].reverse();
 
-  const [chargingData, setChargingData] = useState<ChargingSession[]>([]);
-  const [settingsData, setSettingsData] = useState<Settings | null>(null);
-  const [loading, setLoading] = useState(true);
+  async function deleteChargings() {
+    try {
+      const response = await fetch('/api/charging', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
 
-  useEffect(() => {
-    async function fetchChargingData() {
-      try {
-        const chargingResponse = await fetch('/api/charging');
-        const chargingData = await chargingResponse.json();
-
-        const settingsResponse = await fetch('/api/settings');
-        const settingsData = await settingsResponse.json();
-
-        const sortedData = chargingData.sort((a: ChargingSession, b: ChargingSession) => {
-          const dateA = new Date(a.startTime).getTime();
-          const dateB = new Date(b.startTime).getTime();
-          return dateB - dateA;
-        });
-
-        setChargingData(sortedData);
-        setSettingsData(settingsData[0]);
-      } catch (error) {
-        return 0;
-      } finally {
-        setLoading(false);
+      if (response.ok) {
+        deleteAllChargingData();
+        console.log('All charging data deleted successfully');
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to delete charging data:', errorData.error);
       }
+    } catch (error) {
+      console.error('Fetch error:', error);
     }
-
-    fetchChargingData();
-  }, []);
-
+  }
+  
   async function generateExcelFile() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Sheet1');
@@ -386,22 +360,22 @@ export default function Page() {
 
       // Transmission cost per kWh
       Object.assign(worksheet.getCell('C47'), {
-        value: settingsData ? settingsData.transmissionFee / 100 : 0,
+        value: settings ? settings.transmissionFee / 100 : 0,
       });
 
       // Transmission fee EUR
       Object.assign(worksheet.getCell('C48'), {
-        value: settingsData ? settingsData.transmissionFee * electricityTotal / 100 : 0,
+        value: settings ? settings.transmissionFee * electricityTotal / 100 : 0,
       });
 
       // Margin price per kWh
       Object.assign(worksheet.getCell('C49'), {
-        value: settingsData ? settingsData.marginPrice / 100 : 0,
+        value: settings ? settings.marginPrice / 100 : 0,
       });
 
       // Margin price EUR
       Object.assign(worksheet.getCell('C50'), {
-        value: settingsData ? (settingsData.marginPrice * electricityTotal / 100).toFixed(5) : 0,
+        value: settings ? (settings.marginPrice * electricityTotal / 100).toFixed(5) : 0,
       });
 
       // Electricity price EUR
@@ -411,7 +385,7 @@ export default function Page() {
 
       // Electricity price + margin price + transmission fee
       Object.assign(worksheet.getCell('C54'), {
-        value: (chargingData.reduce((total, session) => total + session.totalCost, 0)) + (settingsData ? settingsData.marginPrice * electricityTotal / 100 : 0) + (settingsData ? settingsData.transmissionFee * electricityTotal / 100 : 0)
+        value: (chargingData.reduce((total, session) => total + session.totalCost, 0)) + (settings ? settings.marginPrice * electricityTotal / 100 : 0) + (settings ? settings.transmissionFee * electricityTotal / 100 : 0)
       });
     });
 
@@ -430,6 +404,7 @@ export default function Page() {
     return `${day}.${month}.${year}`;
   };
 
+  // Function to get the Excel column letter based on the index
   function getExcelColumn(colIndex: number): string {
     let column = "";
     while (colIndex > 0) {
@@ -448,18 +423,29 @@ export default function Page() {
       mx="auto"
       mah='78vh'
     >
-      <LoadingOverlay
-        visible={loading}
-        zIndex={1000}
-        overlayProps={{ radius: 'sm', blur: 2, color: 'rgba(14, 14, 14, 0.6)' }}
-        loaderProps={{ color: '#fffb00', type: 'bars' }}
-      />
+      <Modal opened={opened} onClose={close} title="Deletion of all chargings" centered>
+        Are you sure you want to delete all charging data?
+        <Group mt="sm" justify="flex-end">
+          <Button 
+              onClick={() => {
+                if (dataCharging.length != 0) {
+                  {deleteChargings()};
+                }
+                {close()};
+              }}
+              bg='red'
+            >
+              Delete
+          </Button>
+        </Group>
+      </Modal>
       <Group justify="flex-end" gap="xs">
         <Button 
           rightSection={<IconTrash size={14}/>}
           w='120px'
           bg='#141414'
           p={8}
+          onClick={open}
         >
           Delete all
         </Button>
@@ -472,8 +458,16 @@ export default function Page() {
           Export
         </Button>
       </Group>
-      <Table.ScrollContainer bg="#0e0e0e" minWidth={100} style={{ borderRadius: '4px' }}>
-        <Table>
+      <Table.ScrollContainer 
+        bg="#0e0e0e" 
+        minWidth={100} 
+        type="native" 
+        mah='60vh'
+        style={{ 
+          borderRadius: '6px', 
+        }}
+      >
+        <Table stickyHeaderOffset={60}>
           <Table.Thead>
             <Table.Tr bd={0} bg="#2f2f2f">
               <Table.Td c="#fffb00" ta="center"><IconCalendar/></Table.Td>
