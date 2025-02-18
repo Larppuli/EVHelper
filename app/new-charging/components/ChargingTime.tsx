@@ -14,15 +14,14 @@ export default function ChargingTime({ onHourChange, onMinuteChange, hours, minu
   return (
     <div 
       style={{ 
-        maxWidth: '300px', 
+        width: '80%',
         margin: 'auto', 
         display: "flex", 
         justifyContent: "center", 
         gap: "20px", 
-        marginTop: "23px",
+        marginTop: "10px",
        }}
     >
-      {/* Number input for hours */}
       <NumberInput
         label="Hours"
         placeholder="Enter hours"
@@ -50,7 +49,6 @@ export default function ChargingTime({ onHourChange, onMinuteChange, hours, minu
           },
         })}
       />
-      {/* Number input for minutes */}
       <NumberInput
         label="Minutes"
         placeholder="Enter minutes"

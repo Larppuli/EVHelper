@@ -13,7 +13,7 @@ export default function MeterNumAfter( { onMeterNumAfterChange, meterNumAfter, m
     const icon = <IconChargingPileFilled size={20} />;
 
     return (
-        <div style={{ maxWidth: '300px', margin: 'auto', marginTop: '23px' }}>
+        <div style={{ width: '80%', margin: 'auto', marginTop: '10px' }}>
             <NumberInput
                 leftSection={icon}
                 label="Meter number after charging"
