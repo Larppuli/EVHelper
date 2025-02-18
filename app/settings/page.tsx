@@ -1,37 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Stack, LoadingOverlay } from '@mantine/core';
+import { useState } from 'react';
+import { Stack } from '@mantine/core';
 import FeeInput from './components/FeeInput';
 import SaveSettingsButton from './components/SaveSettingsButton';
+import { useData } from '../context/DataContext';
 
 export default function Page() {
-  const [transmissionFee, setTransmissionFee] = useState<number>(0);
-  const [marginPrice, setMarginPrice] = useState<number>(0);
+  const { data: { settings } } = useData() || { 
+    data: { settings: {} }, 
+    addChargingData: () => {}, 
+    updateSettings: () => {} 
+  };
   const [savingLoading, setSavingLoading] = useState<boolean>(false);
-  const [overlayActive, setOverlayActive] = useState<boolean>(true);
   const [settingsFound, setSettingsFound] = useState<boolean>(false);
+  const [transmissionFee, setTransmissionFee] = useState<number>(settings.transmissionFee || 0);
+  const [marginPrice, setMarginPrice] = useState<number>(settings.marginPrice || 0);
 
   const handleTransmissionFeeChange = (value: number) => setTransmissionFee(value);
   const handleMarginPriceChange = (value: number) => setMarginPrice(value);
-
-    useEffect(() => {
-      async function fetchSettingsData() {
-        try {
-          const response = await fetch('/api/settings');
-          const data = await response.json();
-          setMarginPrice(data[0]?.marginPrice);
-          setTransmissionFee(data[0]?.transmissionFee);
-          setSettingsFound(!!data[0]?.marginPrice || !!data[0]?.transmissionFee);
-        } catch (error) {
-          console.error('Failed to fetch charging data:', error);
-        } finally {
-          setOverlayActive(false);
-        }
-      }
-  
-      fetchSettingsData();
-    }, []);
 
   const handleSave = async () => {
     const settingsObject = {
@@ -41,7 +28,6 @@ export default function Page() {
 
     try {
       if(settingsFound) {
-        console.log(transmissionFee, marginPrice)
         const response = await fetch('/api/settings', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -76,12 +62,6 @@ export default function Page() {
         pt='7px'
         mx='10px'
       >
-        <LoadingOverlay
-          visible={overlayActive}
-          zIndex={1000}
-          overlayProps={{ radius: 'sm', blur: 2, color: 'rgba(14, 14, 14, 0.6)' }}
-          loaderProps={{ color: '#fffb00', type: 'bars' }}
-        />
         <FeeInput onFeeInputChange={handleMarginPriceChange} feeInput={marginPrice} suffix=' snt/kWh' label='Margin price' decimal={3} step={0.001} />
         <FeeInput onFeeInputChange={handleTransmissionFeeChange} feeInput={transmissionFee} suffix=' snt/kWh' label='Transmission fee' decimal={5} step={0.00001} />
         <SaveSettingsButton disabled={!marginPrice || !transmissionFee} loading={savingLoading} onClick={() => { handleSave(); setSavingLoading(true); }}/>
