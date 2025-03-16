@@ -376,15 +376,17 @@ export default function Page() {
         value: settings ? settings.marginPrice / 100 : 0,
       });
 
+      const totalMarginPrice = settings ? settings.marginPrice * electricityTotal / 100 : 0
+
       // Margin price EUR
       Object.assign(worksheet.getCell('C50'), {
-        value: settings ? (settings.marginPrice * electricityTotal / 100).toFixed(5) : 0,
+        value: Number(totalMarginPrice.toFixed(6)),
         alignment: { horizontal: 'right' },
       });
 
       // Electricity price EUR
       Object.assign(worksheet.getCell('C52'), {
-        value: chargingData.reduce((total, session) => total + session.totalCost, 0),
+        value: totalMarginPrice + chargingData.reduce((total, session) => total + session.totalCost, 0),
       });
 
       // Electricity price + margin price + transmission fee
