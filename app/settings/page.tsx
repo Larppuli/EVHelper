@@ -58,7 +58,7 @@ export default function Page() {
         w='90vw' 
         maw='400px' 
         mt='2vh' 
-        bg='#0e0e0e' 
+        bg='#141414' 
         pt='7px'
         mx='10px'
       >

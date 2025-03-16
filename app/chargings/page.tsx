@@ -201,7 +201,10 @@ export default function Page() {
         });
 
         Object.assign(worksheet.getCell(`${EURColumnLetter}${hourOfCharging.hour + 8}`), {
-          value: hourOfCharging.electricity * hourOfCharging.priceOfHour.price / 100,
+          value: (parseFloat(
+            ((hourOfCharging.priceOfHour.price > 0 ? hourOfCharging.priceOfHour.price : 0) 
+            * hourOfCharging.priceOfHour.price / 100).toFixed(6)
+          )).toString(),
           alignment: { horizontal: 'center' }
         });
 
@@ -216,7 +219,7 @@ export default function Page() {
         });
 
         Object.assign(worksheet.getCell(`${EURkWhColumnLetter}32`), {
-          value: (session.totalCost / (session.meterNumAfter - session.initialMeterNum)).toFixed(4),
+          value: (session.totalCost / (session.meterNumAfter - session.initialMeterNum)).toFixed(6),
           alignment: { horizontal: 'center' },
           font: { bold: true },
           border: {
@@ -376,6 +379,7 @@ export default function Page() {
       // Margin price EUR
       Object.assign(worksheet.getCell('C50'), {
         value: settings ? (settings.marginPrice * electricityTotal / 100).toFixed(5) : 0,
+        alignment: { horizontal: 'right' },
       });
 
       // Electricity price EUR
@@ -392,7 +396,7 @@ export default function Page() {
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   
-    saveAs(blob, 'test.xlsx');
+    saveAs(blob, 'porssisahko_latausveloitukset.xlsx');
   }
 
   function formatDate(isoString: string): string {
