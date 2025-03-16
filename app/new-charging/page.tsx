@@ -131,7 +131,7 @@ export default function Page() {
       startTime: startTime.toString(),
       endTime: endTime.toString(),
       chargingHours: priceOfHours,
-      totalCost: priceOfHours.reduce((total, hour) => total + hour.priceOfHour.price * hour.electricity, 0) / 100,
+      totalCost: priceOfHours.reduce((total, hour) => total + (hour.priceOfHour.price > 0 ? hour.priceOfHour.price : 0) * hour.electricity, 0) / 100,
       totalTime: hours * 60 + minutes,
       marginCost: settings.marginPrice * (meterNumAfter - initialMeterNum) * 0.01,
       transmissionCost: settings.transmissionFee * (meterNumAfter - initialMeterNum) * 0.01,
@@ -181,7 +181,7 @@ export default function Page() {
         w='90vw'
         maw='400px'
         mt='2vh'
-        bg='#0e0e0e'
+        bg='#141414'
         pt='4vh'
         mx='10px'
       >
@@ -207,8 +207,8 @@ export default function Page() {
                 color="green" 
                 title="All good!" mt="md"
                 style={{
-                  ...styles, // Spread the transition styles
-                  width: '90%', // Set your desired width here
+                  ...styles,
+                  width: '90%',
                 }}
                 styles={{
                   title: { 
