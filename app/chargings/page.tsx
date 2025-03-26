@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Stack, Table, Group, Button, Modal } from '@mantine/core';
 import { IconCalendar, IconReceiptEuro, IconChargingPile, IconChargingPileFilled, IconDownload, IconTrash } from '@tabler/icons-react';
 import ExcelJS from 'exceljs';
@@ -8,8 +9,10 @@ import { useData } from '../context/DataContext';
 import { useDisclosure } from '@mantine/hooks';
 
 export default function Page() {
-  const { data: { settings, dataCharging }, deleteAllChargingData } = useData() || { data: { settings: {}, dataCharging: [], deleteAllChargingData: () => {} } };
+  const { data: { settings, dataCharging }, deleteAllChargingData, deleteChargingData } = useData() || { data: { settings: {}, dataCharging: [], deleteAllChargingData: () => {} } };
   const [opened, { open, close }] = useDisclosure(false);
+  const [deleteType, setDeleteType] = useState<'all' | 'single' | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const chargingData = [...dataCharging].reverse();
 
@@ -22,13 +25,47 @@ export default function Page() {
 
       if (response.ok) {
         deleteAllChargingData();
-        console.log('All charging data deleted successfully');
+        close();
       } else {
         const errorData = await response.json();
-        console.error('Failed to delete charging data:', errorData.error);
       }
     } catch (error) {
       console.error('Fetch error:', error);
+    }
+  }
+
+  async function deleteChargingById(id: string) {
+    try {
+      const response = await fetch(`/api/charging?id=${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+  
+      const result = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete charging data');
+      }
+  
+      console.log(`Charging data with ID ${id} deleted successfully`);
+      deleteChargingData(id);
+      close();
+    } catch (error) {
+      console.error('Error deleting charging data:', error);
+    }
+  }
+
+  function openDeleteModal(type: 'all' | 'single', id?: string) {
+    setDeleteType(type);
+    setSelectedId(id || null);
+    open();
+  }
+
+  function handleDelete() {
+    if (deleteType === 'all') {
+      deleteChargings();
+    } else if (deleteType === 'single' && selectedId) {
+      deleteChargingById(selectedId);
     }
   }
   
@@ -429,30 +466,14 @@ export default function Page() {
       mx="auto"
       mah='78vh'
     >
-      <Modal opened={opened} onClose={close} title="Deletion of all chargings" centered>
-        Are you sure you want to delete all charging data?
+      <Modal opened={opened} onClose={close} title="Confirm Deletion" centered>
+        {deleteType === 'all' ? 'Are you sure you want to delete all charging sessions?' : 'Are you sure you want to delete this charging session?'}
         <Group mt="sm" justify="flex-end">
-          <Button 
-              onClick={() => {
-                if (dataCharging.length != 0) {
-                  {deleteChargings()};
-                }
-                {close()};
-              }}
-              bg='red'
-            >
-              Delete
-          </Button>
+          <Button onClick={handleDelete} color="red">Delete</Button>
         </Group>
       </Modal>
       <Group justify="flex-end" gap="xs">
-        <Button 
-          rightSection={<IconTrash size={14}/>}
-          w='120px'
-          bg='#141414'
-          p={8}
-          onClick={open}
-        >
+        <Button rightSection={<IconTrash size={14}/>} w='120px' bg='#141414' p={8} onClick={() => openDeleteModal('all')}>
           Delete all
         </Button>
         <Button 
@@ -480,15 +501,23 @@ export default function Page() {
               <Table.Td c="#fffb00" ta="center"><IconChargingPile/></Table.Td>
               <Table.Td c="#fffb00" ta="center"><IconChargingPileFilled/></Table.Td>
               <Table.Td c="#fffb00" ta="center"><IconReceiptEuro/></Table.Td>
+              <Table.Td></Table.Td>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody >
             {chargingData.map((chargingSession, index) => (
               <Table.Tr style={{ borderBottom: '1px solid #2f2f2f' }} key={index}>
-                <Table.Td c="white" ta="center">{new Date(chargingSession.startTime).toLocaleDateString('fi-FI')}</Table.Td>
-                <Table.Td c="white" ta="center">{chargingSession.initialMeterNum.toFixed(2)}</Table.Td>
-                <Table.Td c="white" ta="center">{chargingSession.meterNumAfter.toFixed(2)}</Table.Td>
-                <Table.Td c="white" ta="center">{chargingSession.totalCost.toFixed(2)} €</Table.Td>
+                <Table.Td style={{ fontSize: 15, fontWeight: 600}} c="white" ta="center">{new Date(chargingSession.startTime).toLocaleDateString('fi-FI')}</Table.Td>
+                <Table.Td style={{ fontSize: 15, fontWeight: 600}} c="white" ta="center">{chargingSession.initialMeterNum.toFixed(2)}</Table.Td>
+                <Table.Td style={{ fontSize: 15, fontWeight: 600}} c="white" ta="center">{chargingSession.meterNumAfter.toFixed(2)}</Table.Td>
+                <Table.Td style={{ fontSize: 15, fontWeight: 600}} c="white" ta="center">{chargingSession.totalCost.toFixed(2)} €</Table.Td>
+                <Table.Td c="white" ta="center">
+                  <IconTrash
+                      size={20}
+                      style={{ cursor: 'pointer', marginTop: '6px', color: 'red' }}
+                      onClick={() => openDeleteModal('single', chargingSession._id)}
+                    />
+                </Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>
