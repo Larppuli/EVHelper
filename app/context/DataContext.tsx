@@ -42,6 +42,7 @@ interface DataContextType {
   addChargingData: (newData: ChargingDataItem) => void;
   updateSettings: (newSettings: Settings) => void;
   deleteAllChargingData: () => void
+  deleteChargingData: (id: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -94,8 +95,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }));
   };
 
+  const deleteChargingData = (id: string) => {
+    setData(prevData => ({
+      ...prevData,
+      dataCharging: prevData.dataCharging.filter(item => item._id !== id)
+    }));
+  };
+
   return (
-    <DataContext.Provider value={{ data, addChargingData, updateSettings, deleteAllChargingData }}>
+    <DataContext.Provider value={{ data, addChargingData, updateSettings, deleteAllChargingData, deleteChargingData }}>
       {children}
     </DataContext.Provider>
   );
