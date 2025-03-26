@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const uri = process.env.MONGODB_URI || '';
 const dbName = process.env.MONGODB_DB;
-const collectionName = 'chargings_development';
+const collectionName = 'chargings';
 
 interface ChargingData {
   userId: string;
