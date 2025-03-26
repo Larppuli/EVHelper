@@ -146,7 +146,7 @@ export default function Page() {
 
       if (response.ok) {
         const responseData = await response.json();
-        addChargingData({ ...chargingObject, _id: responseData._id });
+        addChargingData({ ...chargingObject, _id: responseData.insertedId });
         setHours(0);
         setMinutes(0);
         setInitialMeterNum(meterNumAfter);
