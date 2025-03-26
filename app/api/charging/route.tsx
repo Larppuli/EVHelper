@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const uri = process.env.MONGODB_URI || '';
 const dbName = process.env.MONGODB_DB;
-const collectionName = 'chargings';
+const collectionName = 'chargings_development';
 
 interface ChargingData {
   userId: string;
@@ -67,20 +67,36 @@ export async function GET(): Promise<Response> {
   }
 }
 
-export async function DELETE(): Promise<Response> {
+export async function DELETE(req: NextRequest): Promise<Response> {
   try {
+    const id = req.nextUrl.searchParams.get('id');
+
     const { client, collection } = await connectToMongoDB();
-    const result = await collection.deleteMany({});
-    await client.close();
 
-    if (result.deletedCount === 0) {
-      return new NextResponse(JSON.stringify({ error: "No documents found to delete" }), { status: 404 });
+    if (id) {
+      // Delete one document by ID
+      if (!ObjectId.isValid(id)) {
+        await client.close();
+        return NextResponse.json({ error: "Invalid or missing 'id'" }, { status: 400 });
+      }
+
+      const result = await collection.deleteOne({ _id: new ObjectId(id) });
+      await client.close();
+
+      return result.deletedCount
+        ? NextResponse.json({ success: true })
+        : NextResponse.json({ error: "Not found" }, { status: 404 });
+    } else {
+      // Delete all documents if no ID is provided
+      const result = await collection.deleteMany({});
+      await client.close();
+
+      return result.deletedCount
+        ? NextResponse.json({ success: true, deletedCount: result.deletedCount })
+        : NextResponse.json({ error: "No documents found to delete" }, { status: 404 });
     }
-
-    return new NextResponse(JSON.stringify({ success: true, deletedCount: result.deletedCount }), { status: 200 });
   } catch (error) {
     console.error("API Error:", error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
