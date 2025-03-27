@@ -9,6 +9,7 @@ interface SettingsData {
   userId: string;
   marginPrice: number;
   transmissionFee: Date;
+  savedInitialMeterNum: number;
 }
 
 async function connectToMongoDB() {
@@ -71,6 +72,8 @@ export async function PUT(req: NextRequest): Promise<Response> {
     const updateData = await req.json();
     const { client, collection } = await connectToMongoDB();
 
+    delete updateData._id;
+
     const result = await collection.updateOne({}, { $set: updateData });
 
     await client.close();
@@ -82,7 +85,9 @@ export async function PUT(req: NextRequest): Promise<Response> {
     return new NextResponse(JSON.stringify({ success: true }), { status: 200 });
   } catch (error) {
     console.error("API Error:", error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 });
+    return new NextResponse(
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      { status: 500 }
+    );
   }
 }
