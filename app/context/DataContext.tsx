@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 interface Settings {
   marginPrice: number;
   transmissionFee: number;
+  savedInitialMeterNum?: number;
 }
 
 interface PriceOfHour {
@@ -48,7 +49,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<Data>({ settings: { marginPrice: 0, transmissionFee: 0 }, dataCharging: [], isLoading: true });
+  const [data, setData] = useState<Data>({ settings: { marginPrice: 0, transmissionFee: 0, savedInitialMeterNum: 0 }, dataCharging: [], isLoading: true });
 
   useEffect(() => {
     const fetchData = async () => {
