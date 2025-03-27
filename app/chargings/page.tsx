@@ -9,12 +9,14 @@ import { useData } from '../context/DataContext';
 import { useDisclosure } from '@mantine/hooks';
 
 export default function Page() {
-  const { data: { settings, dataCharging }, deleteAllChargingData, deleteChargingData } = useData() || { data: { settings: {}, dataCharging: [], deleteAllChargingData: () => {} } };
+  const { data: { settings, dataCharging }, deleteAllChargingData, deleteChargingData, updateSettings } = useData() || { data: { settings: {}, dataCharging: [], deleteAllChargingData: () => {} } };
   const [opened, { open, close }] = useDisclosure(false);
   const [deleteType, setDeleteType] = useState<'all' | 'single' | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const chargingData = [...dataCharging].reverse();
+
+  console.log(chargingData);
 
   async function deleteChargings() {
     try {
@@ -55,6 +57,18 @@ export default function Page() {
     }
   }
 
+  async function saveMeterNumAfterToDB(meternum: number) {
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...settings, savedInitialMeterNum: meternum }),
+      });   
+    } catch (error) {
+      console.error('Error saving meter number:', error);
+    }
+  };
+
   function openDeleteModal(type: 'all' | 'single', id?: string) {
     setDeleteType(type);
     setSelectedId(id || null);
@@ -63,6 +77,8 @@ export default function Page() {
 
   function handleDelete() {
     if (deleteType === 'all') {
+      saveMeterNumAfterToDB(chargingData[0].meterNumAfter);
+      updateSettings({ ...settings, savedInitialMeterNum: chargingData[0].meterNumAfter });
       deleteChargings();
     } else if (deleteType === 'single' && selectedId) {
       deleteChargingById(selectedId);

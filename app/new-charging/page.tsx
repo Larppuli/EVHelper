@@ -18,6 +18,7 @@ export default function Page() {
     addChargingData: () => {}, 
   };
   const lastCharging = chargingData && chargingData.length > 0 ? chargingData[chargingData.length - 1] : null;
+  console.log(settings)
 
   const [initialMeterNum, setInitialMeterNum] = useState<number>(lastCharging?.meterNumAfter || 0);
   const [meterNumAfter, setMeterNumAfter] = useState<number>(lastCharging?.meterNumAfter || 0);
@@ -34,6 +35,9 @@ export default function Page() {
       setInitialMeterNum(lastCharging.meterNumAfter || 0);
       // Update meterNumAfter if necessary
       setMeterNumAfter(lastCharging.meterNumAfter || 0);
+    } else {
+      setInitialMeterNum(settings.savedInitialMeterNum || 0);
+      setMeterNumAfter(settings.savedInitialMeterNum || 0);
     }
   }, [isLoading, lastCharging]);
 
