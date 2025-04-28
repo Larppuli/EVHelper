@@ -8,7 +8,7 @@ import { MantineProvider } from '@mantine/core';
 import { DataProvider } from './context/DataContext';
 
 export default function RootLayoutClient({ children }: { children: React.ReactNode }) {
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(true);
 
   useEffect(() => {
     const handleResize = () => {
