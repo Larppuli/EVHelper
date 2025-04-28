@@ -47,6 +47,7 @@ function DesktopNavigation() {
                 ml={-15}
                 size="32px"
                 fw={700}
+                c='white'
                 >
                 Helper
             </Text>
