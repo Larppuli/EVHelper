@@ -18,7 +18,6 @@ export default function Page() {
     addChargingData: () => {}, 
   };
   const lastCharging = chargingData && chargingData.length > 0 ? chargingData[chargingData.length - 1] : null;
-  console.log(settings)
 
   const [initialMeterNum, setInitialMeterNum] = useState<number>(lastCharging?.meterNumAfter || 0);
   const [meterNumAfter, setMeterNumAfter] = useState<number>(lastCharging?.meterNumAfter || 0);
@@ -168,9 +167,7 @@ export default function Page() {
 
   return (
     <Stack
-      mt='7vh'
-      h='90vh'
-      w='100vw'
+      mt='5vh'
       align='center'
     >
       <LoadingOverlay
@@ -181,7 +178,7 @@ export default function Page() {
       />
       <Stack
         align='center'
-        h='70vh'
+        h="min(75vh, 600px)"
         w='90vw'
         maw='400px'
         mt='2vh'
