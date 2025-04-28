@@ -50,9 +50,7 @@ export default function Page() {
   return (
     <Stack 
       align='center'
-      h='90vh'
       mt='7vh'
-      w='100vw'
     >
       <Stack 
         w='90vw' 

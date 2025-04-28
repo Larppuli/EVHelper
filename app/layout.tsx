@@ -1,11 +1,8 @@
 import '@mantine/core/styles.css';
-import Navbar from '@/components/Navbar/Navbar';
-import Header from '@/components/Header';
-import React from 'react';
-import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from '@mantine/core';
 import '@mantine/dates/styles.css';
-import { DataProvider } from './context/DataContext';
+import { ColorSchemeScript, mantineHtmlProps } from '@mantine/core';
 import { Metadata, Viewport } from 'next';
+import RootLayoutClient from './RootLayoutClient';
 
 export const metadata: Metadata = {
   title: "EVHelper",
@@ -29,7 +26,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-}
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -38,15 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ColorSchemeScript />
       </head>
       <body style={{ backgroundColor: 'black' }}>
-        <MantineProvider>
-          <DataProvider>
-            <Header />
-            <Navbar />
-            <main>
-              {children}
-            </main>
-          </DataProvider>
-        </MantineProvider>
+        <RootLayoutClient>
+          {children}
+        </RootLayoutClient>
       </body>
     </html>
   );
