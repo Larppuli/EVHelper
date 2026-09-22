@@ -14,8 +14,8 @@ export default function Page() {
   };
   const [savingLoading, setSavingLoading] = useState<boolean>(false);
   const [settingsFound, setSettingsFound] = useState<boolean>(false);
-  const [transmissionFee, setTransmissionFee] = useState<number>(settings.transmissionFee || 0);
-  const [marginPrice, setMarginPrice] = useState<number>(settings.marginPrice || 0);
+  const [transmissionFee, setTransmissionFee] = useState<number>(settings?.transmissionFee || 0);
+  const [marginPrice, setMarginPrice] = useState<number>(settings?.marginPrice || 0);
 
   const handleTransmissionFeeChange = (value: number) => setTransmissionFee(value);
   const handleMarginPriceChange = (value: number) => setMarginPrice(value);

@@ -22,7 +22,7 @@ export default function Page() {
   const [initialMeterNum, setInitialMeterNum] = useState<number>(lastCharging?.meterNumAfter || 0);
   const [meterNumAfter, setMeterNumAfter] = useState<number>(lastCharging?.meterNumAfter || 0);
   const [startTime, setStartTime] = useState<DateTime | null>(
-    DateTime.now().setZone('Europe/Helsinki')
+  DateTime.now().setZone('Europe/Helsinki')
   );
   const [hours, setHours] = useState<number>(0);
   const [minutes, setMinutes] = useState<number>(0);
@@ -35,8 +35,8 @@ export default function Page() {
       // Update meterNumAfter if necessary
       setMeterNumAfter(lastCharging.meterNumAfter || 0);
     } else {
-      setInitialMeterNum(settings.savedInitialMeterNum || 0);
-      setMeterNumAfter(settings.savedInitialMeterNum || 0);
+      setInitialMeterNum(settings?.savedInitialMeterNum || 0);
+      setMeterNumAfter(settings?.savedInitialMeterNum || 0);
     }
   }, [isLoading, lastCharging]);
 

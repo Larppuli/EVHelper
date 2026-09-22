@@ -14,7 +14,9 @@ export default function Page() {
   const [deleteType, setDeleteType] = useState<'all' | 'single' | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const chargingData = [...dataCharging].reverse();
+  const chargingData = Array.isArray(dataCharging) 
+  ? [...dataCharging].reverse() 
+  : [];
 
   console.log(chargingData);
 
